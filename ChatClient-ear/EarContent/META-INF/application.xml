@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="7"
+xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee/application_7.xsd">
+
+	<module>
+		<ejb>ChatClient-ejb.jar</ejb>
+	</module>
+	<module>
+		<java>ChatClient-common.jar</java>
+	</module>
+	
+	<jms-destination>
+	<name>java:global/jms/ObserverTopic</name>!
+	<interface-name>javax.jms.Topic</interface-name>!
+	<destination-name>ObserverTopic</destination-name>!
+	</jms-destination>
+</application>	
+	
+

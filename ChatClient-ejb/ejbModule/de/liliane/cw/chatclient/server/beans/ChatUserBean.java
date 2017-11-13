@@ -8,9 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Stateful;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Topic;
 
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagement;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
@@ -22,6 +28,11 @@ import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
 public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	
 	private String userName;
+
+	@Inject
+	private JMSContext jmsContext;
+	@Resource(lookup="java:global/jms/ObserverTopic")
+	private Topic observerTopic;
 
 	@EJB
 	private  ChatManagementLocal  externBean;
@@ -43,7 +54,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		{
 			throw new IllegalArgumentException(userName + " User already exists");
 		}
-		
+		this.userName = userName; 
 		externBean.getUsers().put(userName, generateHash(password));
 		
 	}
@@ -152,5 +163,16 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+	
+	public void notifyViaObserverTopic(){
+		try {
+			Message message = jmsContext.createMessage();
+			message.setIntProperty("OBSERVER_TYPE",ObserverMessageType.INVENTORY.ordinal());
+			jmsContext.createProducer().send(observerTopic, message);
+			} catch (JMSException ex) {
+			System.err.println("Error while notify observers via topic: " + ex.getMessage());
+			}
+	}
+
 
 }
