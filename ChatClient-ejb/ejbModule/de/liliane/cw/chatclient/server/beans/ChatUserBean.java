@@ -6,18 +6,21 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Stateful;
+import javax.enterprise.inject.spi.ObserverMethod;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Topic;
 
+import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagement;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserLocal;
@@ -57,6 +60,8 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		this.userName = userName; 
 		externBean.getUsers().put(userName, generateHash(password));
 		
+		notifyViaObserverTopic();
+		
 	}
 
 	@Override
@@ -79,6 +84,8 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		
 		externBean.getOnlineUsers().add(userName);
 		
+		notifyViaObserverTopic();
+		
 	}
 
 	@Override
@@ -96,12 +103,15 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		}
 		else
 			throw new IllegalArgumentException("User is not connected");
+		
+		notifyViaObserverTopic();
 	}
 
 	@Override
 	public void disconnect() {
 		
 		// wenn ein Benutzer angemeldet ist und ein anderer sich anmelden möchte , muss der vorheriger sich  zuerst sich disconnect
+		notifyViaObserverTopic();
 	}
 
 	@Override
@@ -167,7 +177,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	public void notifyViaObserverTopic(){
 		try {
 			Message message = jmsContext.createMessage();
-			message.setIntProperty("OBSERVER_TYPE",ObserverMessageType.INVENTORY.ordinal());
+			message.setIntProperty("OBSERVER_TYPE", ChatMessageType.TEXT.ordinal());
 			jmsContext.createProducer().send(observerTopic, message);
 			} catch (JMSException ex) {
 			System.err.println("Error while notify observers via topic: " + ex.getMessage());

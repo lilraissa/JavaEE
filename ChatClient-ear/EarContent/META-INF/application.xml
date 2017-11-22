@@ -11,6 +11,12 @@ xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee/application_7.xsd">
 	</module>
 	
 	<jms-destination>
+	<name>java:global/jms/CustomerRequestQueue</name>!
+	<interface-name>javax.jms.Queue</interface-name>!
+	<destination-name>CustomerRequestQueue</destination-name>!
+	</jms-destination>
+	
+	<jms-destination>
 	<name>java:global/jms/ObserverTopic</name>!
 	<interface-name>javax.jms.Topic</interface-name>!
 	<destination-name>ObserverTopic</destination-name>!
