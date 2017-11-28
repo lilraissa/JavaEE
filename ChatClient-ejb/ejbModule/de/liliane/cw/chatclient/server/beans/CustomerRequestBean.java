@@ -10,6 +10,7 @@ import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
@@ -33,11 +34,16 @@ public class CustomerRequestBean implements MessageListener {
 			//überprüfen ob Message von Type Text ist
 			int observerType = message.getIntProperty("OBSERVER_TYPE");
 			if (ChatMessageType.TEXT.ordinal() == observerType) {
+				//Textmessage zurückerhalten
 				TextMessage textMessage = (TextMessage) message;
 				ChatMessage chatmessage = new ChatMessage(ChatMessageType.TEXT, textMessage.getStringProperty("NAME"),
 						pruefen(textMessage.getText()), new Date());
+				ObjectMessage objmessage = jmsContext.createObjectMessage();
+				
+				objmessage.setObject(chatmessage);
+				
 				//Message an allen Clients schicken
-				jmsContext.createProducer().send(observerTopic, chatmessage);
+				jmsContext.createProducer().send(observerTopic, objmessage);
 
 			}
 			// ChatMessage chatMessage = new Message

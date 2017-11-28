@@ -13,6 +13,7 @@ import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
@@ -155,6 +156,16 @@ public class ServiceHandlerImpl extends ServiceHandler
 			if (message.getJMSDestination().equals(observerTopic)) {
 				int observerType = message.getIntProperty("OBSERVER_TYPE");
 				if (ChatMessageType.TEXT.ordinal() == observerType) {
+					ObjectMessage objmessage = (ObjectMessage) message;
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();
+					
+					// Beobachter über ÄndString text = textMessage.getText();erungen informieren
+					setChanged();
+					notifyObservers(chatmessage);
+				}
+				
+				else if (ChatMessageType.LOGIN.ordinal() == observerType || ChatMessageType.LOGOUT.ordinal() == observerType) {
+					ObjectMessage objmessage = jmsContext.createObjectMessage();
 					TextMessage textMessage = (TextMessage) message;
 					String text = textMessage.getText();
 					// Beobachter über Änderungen informieren

@@ -183,11 +183,11 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 			Date date = new Date();
 			SimpleDateFormat format = new SimpleDateFormat("hh:mm");
 			String s = String.format(userName + "hat sich um " + format.format(date) + " Uhr %."  , msge);
-			ObjectMessage message = jmsContext.createObjectMessage();
-			message.setIntProperty("OBSERVER_TYPE", type.ordinal());
+			ObjectMessage objmessage = jmsContext.createObjectMessage();
+			objmessage.setIntProperty("OBSERVER_TYPE", type.ordinal());
 			ChatMessage chatmessage = new ChatMessage(type, userName, s, date);
-			message.setObject(chatmessage);
-			jmsContext.createProducer().send(observerTopic, message);
+			objmessage.setObject(chatmessage);
+			jmsContext.createProducer().send(observerTopic, objmessage);
 			
 			} catch (JMSException ex) {
 			System.err.println("Error while notify observers via topic: " + ex.getMessage());
