@@ -38,6 +38,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 	private ChatUserRemote chatUser;
 	private JMSContext jmsContext;
 	private Topic observerTopic;
+	private Topic disconnectTopic;
 	private Queue customerRequestQueue;
 	// private static String userName;
 
@@ -74,6 +75,11 @@ public class ServiceHandlerImpl extends ServiceHandler
 			// Topic
 			observerTopic = (Topic) ctx.lookup("java:global/jms/ObserverTopic");
 			jmsContext.createConsumer(observerTopic).setMessageListener(this);
+
+			String selector = "name = " + getUserName();
+			// DisconnectTopic
+			disconnectTopic = (Topic) ctx.lookup("java:global/jms/DisconnectTopic");
+			jmsContext.createConsumer(disconnectTopic, selector).setMessageListener(this);
 
 			// Queue
 			customerRequestQueue = (Queue) ctx.lookup("java:global/jms/CustomerRequestQueue");
@@ -151,26 +157,38 @@ public class ServiceHandlerImpl extends ServiceHandler
 		try {
 
 			// textMessage.setStringProperty("NAME", userName);
-			// überprüfen ob, unser Nachricht über unser observerTopic
+			// ï¿½berprï¿½fen ob, unser Nachricht ï¿½ber unser observerTopic
 			// eingekommen ist
 			if (message.getJMSDestination().equals(observerTopic)) {
 				int observerType = message.getIntProperty("OBSERVER_TYPE");
 				if (ChatMessageType.TEXT.ordinal() == observerType) {
 					ObjectMessage objmessage = (ObjectMessage) message;
 					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();
-					
-					// Beobachter über ÄndString text = textMessage.getText();erungen informieren
+
+					// Beobachter ï¿½ber ï¿½ndString text =
+					// textMessage.getText();erungen informieren
 					setChanged();
 					notifyObservers(chatmessage);
 				}
-				
-				else if (ChatMessageType.LOGIN.ordinal() == observerType || ChatMessageType.LOGOUT.ordinal() == observerType) {
-					ObjectMessage objmessage = jmsContext.createObjectMessage();
-					TextMessage textMessage = (TextMessage) message;
-					String text = textMessage.getText();
-					// Beobachter über Änderungen informieren
+
+				else if (ChatMessageType.LOGIN.ordinal() == observerType
+						|| ChatMessageType.LOGOUT.ordinal() == observerType
+						|| ChatMessageType.REGISTER.ordinal() == observerType) {
+					ObjectMessage objmessage = (ObjectMessage) message;
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage Ã¼BER informiert
+																					
+					// Beobachter ï¿½ber ï¿½nderungen informieren
 					setChanged();
-					notifyObservers(message);
+					notifyObservers(chatmessage); // Nachricht wird angezeigt
+				}
+				else if (ChatMessageType.DISCONNECT.ordinal() == observerType) {
+					ObjectMessage objmessage = (ObjectMessage) message;
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage Ã¼BER informiert
+																					
+					// Beobachter ï¿½ber ï¿½nderungen informieren
+					setChanged();
+					notifyObservers(chatmessage);
+					disconnect();
 				}
 			}
 
@@ -199,7 +217,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 		} catch (Exception ex) {
 
 			try {
-				throw new Exception("Ihre Nachricht könnte nicht verschickt werden.");
+				throw new Exception("Ihre Nachricht kï¿½nnte nicht verschickt werden.");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -10,10 +10,7 @@
 	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
 	<classpathentry kind="lib" path="lib/reflections-0.9.9-RC1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ChatClient-common"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GlassFish-EJB"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/lib"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GlassFish Client2"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/libs2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GlassFishClient"/>
+	<classpathentry kind="lib" path="C:/dev/lil/glassfish4/glassfish/modules/javax.jms-api.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

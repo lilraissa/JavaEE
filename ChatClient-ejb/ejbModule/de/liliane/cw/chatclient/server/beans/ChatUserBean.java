@@ -40,6 +40,10 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	private JMSContext jmsContext;
 	@Resource(lookup="java:global/jms/ObserverTopic")
 	private Topic observerTopic;
+	
+	//Topic bei  disconnect
+	@Resource(lookup="java:global/jms/DisconnectTopic")
+	private Topic DisconnectTopic;
 
 	@EJB
 	private  ChatManagementLocal  externBean;
@@ -64,7 +68,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		this.userName = userName; 
 		externBean.getUsers().put(userName, generateHash(password));
 		
-		//notifyViaObserverTopic();
+		notifyViaObserverTopic(ChatMessageType.REGISTER, null);
 		
 	}
 
@@ -75,6 +79,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		{
 			throw new IllegalArgumentException("User can not be null");
 		}
+		//haspmap cle valeur qui prend lutilisateur en cle et retourne le mdp coe valeur
 		String  pwd= externBean.getUsers().get(userName);
 		if(pwd==null)
 		{
@@ -84,6 +89,19 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		if(!pwd.equals( generateHash(password)))
 		{
 			throw new IllegalArgumentException("Not registred User");
+		}
+		
+		//prüfen, ob benutzer schon angemeldet ist
+		if (externBean.getOnlineUsers().contains(userName)){
+			ChatMessage chatmessage = new ChatMessage(ChatMessageType.DISCONNECT, userName,"Ihre Verbindung wurde getrennt", new Date());
+					
+			ObjectMessage objmessage = jmsContext.createObjectMessage();
+			
+			objmessage.setObject(chatmessage);
+			//selektor nur bei header und property 
+			objmessage.setStringProperty("name", userName); // setProperty nur für diesen user
+			//Message an allen Clients schicken
+			jmsContext.createProducer().send(DisconnectTopic, objmessage);
 		}
 		
 		externBean.getOnlineUsers().add(userName);
@@ -113,9 +131,13 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 
 	@Override
 	public void disconnect() {
+		if (externBean.getOnlineUsers().contains(userName)){
+			externBean.getOnlineUsers().remove(userName);
+		}
 		
 		// wenn ein Benutzer angemeldet ist und ein anderer sich anmelden möchte , muss der vorheriger sich  zuerst sich disconnect
 		//notifyViaObserverTopic();
+		
 	}
 
 	@Override

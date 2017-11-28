@@ -25,16 +25,16 @@ public class CustomerRequestBean implements MessageListener {
 	private JMSContext jmsContext;
 	@Resource(lookup="java:global/jms/ObserverTopic")
 	private Topic observerTopic;
-	private final static String[] liste={"scheisse","Scheißarsch", "Scheisligkeit"}; 
+	private final static String[] liste={"scheisse","Scheiï¿½arsch", "Scheisligkeit"}; 
 
 	@Override
 	public void onMessage(Message message) {
 		// TODO Auto-generated method stub
 		try {
-			//überprüfen ob Message von Type Text ist
+			//ï¿½berprï¿½fen ob Message von Type Text ist
 			int observerType = message.getIntProperty("OBSERVER_TYPE");
 			if (ChatMessageType.TEXT.ordinal() == observerType) {
-				//Textmessage zurückerhalten
+				//Textmessage zurï¿½ckerhalten
 				TextMessage textMessage = (TextMessage) message;
 				ChatMessage chatmessage = new ChatMessage(ChatMessageType.TEXT, textMessage.getStringProperty("NAME"),
 						pruefen(textMessage.getText()), new Date());
@@ -46,6 +46,7 @@ public class CustomerRequestBean implements MessageListener {
 				jmsContext.createProducer().send(observerTopic, objmessage);
 
 			}
+			
 			// ChatMessage chatMessage = new Message
 			// CustomerRequest customerequest = new CustomerRequest();
 			// message.setIntProperty("OBSERVER_TYPE",
@@ -57,7 +58,7 @@ public class CustomerRequestBean implements MessageListener {
 		}
 
 	}
-	
+	//schimpwÃ¶ter prÃ¼fen
 	public String pruefen(String msge){
 		for(int i=0; i<liste.length;i++ ){
 			msge.replace(liste[i], "***");

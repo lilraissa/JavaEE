@@ -11,5 +11,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="D:/BACHELOR/5.SEMESTER/Componentware/Praktikum n Phase 1/00 Installation/glassfish4/glassfish/lib/appserv-rt.jar"/>
 	<classpathentry kind="lib" path="D:/BACHELOR/5.SEMESTER/Componentware/Praktikum n Phase 1/00 Installation/glassfish4/glassfish/lib/javaee.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GlassFishClient"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

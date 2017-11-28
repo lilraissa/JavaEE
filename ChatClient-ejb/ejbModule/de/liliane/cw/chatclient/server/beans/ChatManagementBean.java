@@ -70,7 +70,7 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 		if (createTimer) {
 			TimerConfig timerConfig = new TimerConfig();
 			timerConfig.setInfo(MAIL_STATISTIC_TIMER);
-			timerConfig.setPersistent(true);  //Default value
+			timerConfig.setPersistent(true); // Default value
 
 			// Intervall-Timer
 			Calendar initialExpirationCalendar = new GregorianCalendar();
@@ -84,7 +84,7 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 3600, timerConfig);
 		}
 	}
-	
+
 	@Timeout
 	public void timeout(Timer timer) {
 		if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
@@ -93,10 +93,10 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 			currentDateCalendar.set(Calendar.MINUTE, 0);
 			currentDateCalendar.set(Calendar.SECOND, 0);
 			currentDateCalendar.set(Calendar.DAY_OF_MONTH, 0);
-			
+
 			// jai pas fini limplementation
 		}
-		
+
 	}
 
 	@Override
