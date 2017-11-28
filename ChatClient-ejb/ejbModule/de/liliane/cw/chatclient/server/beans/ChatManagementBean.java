@@ -18,6 +18,8 @@ import javax.jms.Topic;
 
 import com.sun.xml.ws.developer.Stateful;
 
+import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
+import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 import de.liliane.cw.chatclient.server.entities.User;
@@ -79,18 +81,6 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 	}
 	
 	
-	public void notifyViaObserverTopic(){
-		try {
-			Message message = jmsContext.createMessage();
-			message.setIntProperty("OBSERVER_TYPE",ObserverMessageType.INVENTORY.ordinal());
-			jmsContext.createProducer().send(observerTopic, message);
-			} catch (JMSException ex) {
-			System.err.println("Error while notify observers via topic: " + ex.getMessage());
-			}
-	}
-
-
-
 	
 
 }

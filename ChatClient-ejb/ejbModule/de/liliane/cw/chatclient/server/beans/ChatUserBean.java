@@ -3,7 +3,9 @@ package de.liliane.cw.chatclient.server.beans;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
@@ -18,8 +20,10 @@ import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.ObjectMessage;
 import javax.jms.Topic;
 
+import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagement;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
@@ -60,7 +64,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		this.userName = userName; 
 		externBean.getUsers().put(userName, generateHash(password));
 		
-		notifyViaObserverTopic();
+		//notifyViaObserverTopic();
 		
 	}
 
@@ -84,7 +88,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		
 		externBean.getOnlineUsers().add(userName);
 		
-		notifyViaObserverTopic();
+		notifyViaObserverTopic(ChatMessageType.LOGIN, "angemeldet");
 		
 	}
 
@@ -104,14 +108,14 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		else
 			throw new IllegalArgumentException("User is not connected");
 		
-		notifyViaObserverTopic();
+		notifyViaObserverTopic(ChatMessageType.LOGOUT, "angemeldet");
 	}
 
 	@Override
 	public void disconnect() {
 		
 		// wenn ein Benutzer angemeldet ist und ein anderer sich anmelden möchte , muss der vorheriger sich  zuerst sich disconnect
-		notifyViaObserverTopic();
+		//notifyViaObserverTopic();
 	}
 
 	@Override
@@ -174,11 +178,17 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		this.userName = userName;
 	}
 	
-	public void notifyViaObserverTopic(){
+	public void notifyViaObserverTopic(ChatMessageType type, String msge){
 		try {
-			Message message = jmsContext.createMessage();
-			message.setIntProperty("OBSERVER_TYPE", ChatMessageType.TEXT.ordinal());
+			Date date = new Date();
+			SimpleDateFormat format = new SimpleDateFormat("hh:mm");
+			String s = String.format(userName + "hat sich um " + format.format(date) + " Uhr %."  , msge);
+			ObjectMessage message = jmsContext.createObjectMessage();
+			message.setIntProperty("OBSERVER_TYPE", type.ordinal());
+			ChatMessage chatmessage = new ChatMessage(type, userName, s, date);
+			message.setObject(chatmessage);
 			jmsContext.createProducer().send(observerTopic, message);
+			
 			} catch (JMSException ex) {
 			System.err.println("Error while notify observers via topic: " + ex.getMessage());
 			}

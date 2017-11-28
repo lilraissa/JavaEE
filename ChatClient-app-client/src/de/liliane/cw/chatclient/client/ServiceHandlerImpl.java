@@ -28,8 +28,9 @@ import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
 
-public class ServiceHandlerImpl extends ServiceHandler implements UserSessionHandler, MessageListener , ChatMessageHandler{
-	
+public class ServiceHandlerImpl extends ServiceHandler
+		implements UserSessionHandler, MessageListener, ChatMessageHandler {
+
 	private static ServiceHandlerImpl instance;
 	private Context ctx;
 	private ChatManagementRemote chatManagement;
@@ -37,47 +38,50 @@ public class ServiceHandlerImpl extends ServiceHandler implements UserSessionHan
 	private JMSContext jmsContext;
 	private Topic observerTopic;
 	private Queue customerRequestQueue;
-	
+	// private static String userName;
+
 	private ServiceHandlerImpl() {
-			
-			try {
-				ctx=new InitialContext();
-				chatManagement=(ChatManagementRemote)ctx.lookup("java:global/ChatClient-ear/ChatClient-ejb/ChatManagementBean!de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote");
-				chatUser=(ChatUserRemote)ctx.lookup("java:global/ChatClient-ear/ChatClient-ejb/ChatUserBean!de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote");
-				initializeJMSConnections();
-			} catch (NamingException e) {
-				
-				e.printStackTrace();
-			}
-	
+
+		try {
+			ctx = new InitialContext();
+			chatManagement = (ChatManagementRemote) ctx.lookup(
+					"java:global/ChatClient-ear/ChatClient-ejb/ChatManagementBean!de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote");
+			chatUser = (ChatUserRemote) ctx.lookup(
+					"java:global/ChatClient-ear/ChatClient-ejb/ChatUserBean!de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote");
+			initializeJMSConnections();
+		} catch (NamingException e) {
+
+			e.printStackTrace();
 		}
-	
+
+	}
+
 	public static ServiceHandlerImpl getInstance() {
-		if (instance == null){
+		if (instance == null) {
 			instance = new ServiceHandlerImpl();
 		}
 		return instance;
 	}
-	
-	private void initializeJMSConnections(){
-		try{
-			//common
-			ConnectionFactory connectionFactory = (ConnectionFactory)ctx.lookup("java:comp/defaultJMSConnectionFactory");
+
+	private void initializeJMSConnections() {
+		try {
+			// common
+			ConnectionFactory connectionFactory = (ConnectionFactory) ctx
+					.lookup("java:comp/defaultJMSConnectionFactory");
 			jmsContext = connectionFactory.createContext();
-			
-			//Topic
+
+			// Topic
 			observerTopic = (Topic) ctx.lookup("java:global/jms/ObserverTopic");
 			jmsContext.createConsumer(observerTopic).setMessageListener(this);
-			
-			//Queue
-			customerRequestQueue = (Queue)ctx.lookup("java:global/jms/CustomerRequestQueue");
-			
-		}
-		catch(Exception ex){
+
+			// Queue
+			customerRequestQueue = (Queue) ctx.lookup("java:global/jms/CustomerRequestQueue");
+
+		} catch (Exception ex) {
 			ex.printStackTrace();
-			
+
 		}
-		
+
 	}
 
 	@Override
@@ -88,37 +92,37 @@ public class ServiceHandlerImpl extends ServiceHandler implements UserSessionHan
 
 	@Override
 	public void delete(String arg0) throws Exception {
-		
+
 		chatUser.delete(arg0);
 	}
 
 	@Override
 	public void disconnect() {
-		
+
 		chatUser.disconnect();
 	}
 
 	@Override
 	public int getNumberOfOnlineUsers() {
-		
+
 		return chatManagement.getNumberOfOnlineUsers();
 	}
 
 	@Override
 	public int getNumberOfRegisteredUsers() {
-		
-		return  chatManagement.getNumberOfOnlineUsers();
+
+		return chatManagement.getNumberOfOnlineUsers();
 	}
 
 	@Override
 	public List<String> getOnlineUsers() {
-		
+
 		return chatManagement.getOnlineUsers();
 	}
 
 	@Override
 	public String getUserName() {
-		
+
 		return chatUser.getUserName();
 	}
 
@@ -130,67 +134,77 @@ public class ServiceHandlerImpl extends ServiceHandler implements UserSessionHan
 
 	@Override
 	public void logout() throws Exception {
-		
+
 		chatUser.logout();
 	}
 
 	@Override
 	public void register(String arg0, String arg1) throws Exception {
-		
+
 		chatUser.register(arg0, arg1);
 	}
 
 	@Override
 	public void onMessage(Message message) {
 		// TODO Auto-generated method stub
-		try{
-			//überprüfen ob, unser Nachricht über unser observerTopic eingekommen ist
-			if(message.getJMSDestination().equals(observerTopic)){
+		try {
+
+			// textMessage.setStringProperty("NAME", userName);
+			// überprüfen ob, unser Nachricht über unser observerTopic
+			// eingekommen ist
+			if (message.getJMSDestination().equals(observerTopic)) {
 				int observerType = message.getIntProperty("OBSERVER_TYPE");
-				if(ChatMessageType.TEXT.ordinal() == observerType){
-					//Beobachter über Änderungen informieren
+				if (ChatMessageType.TEXT.ordinal() == observerType) {
+					TextMessage textMessage = (TextMessage) message;
+					String text = textMessage.getText();
+					// Beobachter über Änderungen informieren
 					setChanged();
 					notifyObservers(message);
 				}
-			}	
-			
-			
-		}
-		catch(JMSException ex){
+			}
+
+		} catch (JMSException ex) {
 			ex.printStackTrace();
-			
+
 		}
-		
+
 	}
 
 	@Override
-	public void sendChatMessage(String text){
-		
-		String msgeText =	generateHash(text);
+	public void sendChatMessage(String message) {
+
+		// String msgeText = generateHash(text);
 		try {
-			
-			ChatMessage  chatMessage = new ChatMessage(text, sender, text, date);
-			
-		} catch (Exception ex ) {
-			
-				try {
-					throw new Exception("Ihre Nachricht könnte nicht verschickt werden.");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			
+			TextMessage textMessage = jmsContext.createTextMessage();
+			textMessage.setStringProperty("NAME", this.getUserName());
+			textMessage.setIntProperty("OBSERVER_TYPE", ChatMessageType.TEXT.ordinal());
+			textMessage.setText(message);
+
+			jmsContext.createProducer().send(customerRequestQueue, textMessage);
+
+			// ChatMessage chatMessage = new ChatMessage(text, sender, text,
+			// date);
+
+		} catch (Exception ex) {
+
+			try {
+				throw new Exception("Ihre Nachricht könnte nicht verschickt werden.");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		}
-	
+
 	}
-	
+
 	public String generateHash(String plaintext) {
 		String hash;
 		try {
-		MessageDigest encoder = MessageDigest.getInstance("SHA-1");
-		hash = String.format("%040x", new BigInteger(1, encoder.digest(plaintext.getBytes())));
+			MessageDigest encoder = MessageDigest.getInstance("SHA-1");
+			hash = String.format("%040x", new BigInteger(1, encoder.digest(plaintext.getBytes())));
 		} catch (NoSuchAlgorithmException e) {
-		hash = null;
+			hash = null;
 		}
 		return hash;
 	}
