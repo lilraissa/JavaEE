@@ -3,8 +3,9 @@
 	<name>CarFinancing-ear</name>
 	<comment></comment>
 	<projects>
-		<project>CarFinancing-ejb</project>
+		<project>CarFinancing-app-client</project>
 		<project>CarFinancing-common</project>
+		<project>CarFinancing-ejb</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -21,5 +22,6 @@
 	<natures>
 		<nature>org.eclipse.wst.common.project.facet.core.nature</nature>
 		<nature>org.eclipse.wst.common.modulecore.ModuleCoreNature</nature>
+		<nature>org.eclipse.wst.jsdt.core.jsNature</nature>
 	</natures>
 </projectDescription>

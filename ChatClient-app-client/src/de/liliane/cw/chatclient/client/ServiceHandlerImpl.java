@@ -23,14 +23,17 @@ import javax.naming.NamingException;
 
 import de.fh_dortmund.inf.cw.chat.client.shared.ChatMessageHandler;
 import de.fh_dortmund.inf.cw.chat.client.shared.ServiceHandler;
+import de.fh_dortmund.inf.cw.chat.client.shared.StatisticHandler;
 import de.fh_dortmund.inf.cw.chat.client.shared.UserSessionHandler;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
+import de.liliane.cw.chatclient.server.entities.CommonStatistic;
+import de.liliane.cw.chatclient.server.entities.UserStatistic;
 
 public class ServiceHandlerImpl extends ServiceHandler
-		implements UserSessionHandler, MessageListener, ChatMessageHandler {
+		implements UserSessionHandler, MessageListener, ChatMessageHandler, StatisticHandler {
 
 	private static ServiceHandlerImpl instance;
 	private Context ctx;
@@ -227,15 +230,15 @@ public class ServiceHandlerImpl extends ServiceHandler
 
 	}
 
-	public String generateHash(String plaintext) {
-		String hash;
-		try {
-			MessageDigest encoder = MessageDigest.getInstance("SHA-1");
-			hash = String.format("%040x", new BigInteger(1, encoder.digest(plaintext.getBytes())));
-		} catch (NoSuchAlgorithmException e) {
-			hash = null;
-		}
-		return hash;
+	public UserStatistic getUserStatistic() {
+		
+		
+		
+	}
+	
+	public CommonStatistic[] getStatistics() {
+		CommonStatistic[]  dieCommonStatistic;
+		return dieCommonStatistic;
 	}
 
 }
