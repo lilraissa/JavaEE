@@ -23,7 +23,7 @@ xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee/application_7.xsd">
 	</jms-destination>
 	
 	<jms-destination>
-	<name>java:global/jms/ObserverTopic</name>!
+	<name>java:global/jms/DisconnectTopic</name>!
 	<interface-name>javax.jms.Topic</interface-name>!
 	<destination-name>DisconnectTopic</destination-name>!
 	</jms-destination>

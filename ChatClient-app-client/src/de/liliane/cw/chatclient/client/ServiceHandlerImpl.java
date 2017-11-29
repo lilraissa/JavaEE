@@ -25,12 +25,12 @@ import de.fh_dortmund.inf.cw.chat.client.shared.ChatMessageHandler;
 import de.fh_dortmund.inf.cw.chat.client.shared.ServiceHandler;
 import de.fh_dortmund.inf.cw.chat.client.shared.StatisticHandler;
 import de.fh_dortmund.inf.cw.chat.client.shared.UserSessionHandler;
+import de.fh_dortmund.inf.cw.chat.server.entities.CommonStatistic;
+import de.fh_dortmund.inf.cw.chat.server.entities.UserStatistic;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
-import de.liliane.cw.chatclient.server.entities.CommonStatistic;
-import de.liliane.cw.chatclient.server.entities.UserStatistic;
 
 public class ServiceHandlerImpl extends ServiceHandler
 		implements UserSessionHandler, MessageListener, ChatMessageHandler, StatisticHandler {
@@ -72,7 +72,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 		try {
 			// common
 			ConnectionFactory connectionFactory = (ConnectionFactory) ctx
-					.lookup("java:comp/defaultJMSConnectionFactory");
+					.lookup("java:comp/DefaultJMSConnectionFactory");
 			jmsContext = connectionFactory.createContext();
 
 			// Topic
@@ -230,15 +230,16 @@ public class ServiceHandlerImpl extends ServiceHandler
 
 	}
 
+	@Override
 	public UserStatistic getUserStatistic() {
-		
-		
-		
+		// TODO Auto-generated method stub
+		return null;
 	}
-	
-	public CommonStatistic[] getStatistics() {
-		CommonStatistic[]  dieCommonStatistic;
-		return dieCommonStatistic;
+
+	@Override
+	public List<CommonStatistic> getStatistics() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

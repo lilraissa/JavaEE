@@ -39,7 +39,7 @@ public class CustomerRequestBean implements MessageListener {
 				ChatMessage chatmessage = new ChatMessage(ChatMessageType.TEXT, textMessage.getStringProperty("NAME"),
 						pruefen(textMessage.getText()), new Date());
 				ObjectMessage objmessage = jmsContext.createObjectMessage();
-				
+				objmessage.setIntProperty("OBSERVER_TYPE", ChatMessageType.TEXT.ordinal());
 				objmessage.setObject(chatmessage);
 				
 				//Message an allen Clients schicken
@@ -61,7 +61,7 @@ public class CustomerRequestBean implements MessageListener {
 	//schimpwöter prüfen
 	public String pruefen(String msge){
 		for(int i=0; i<liste.length;i++ ){
-			msge.replace(liste[i], "***");
+			msge = msge.replace(liste[i], "***");
 		}
 		return msge;
 	}

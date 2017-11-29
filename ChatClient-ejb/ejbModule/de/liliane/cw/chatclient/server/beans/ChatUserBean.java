@@ -4,28 +4,19 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
 import javax.ejb.Stateful;
-import javax.enterprise.inject.spi.ObserverMethod;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.Topic;
 
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
-import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagement;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
@@ -204,7 +195,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		try {
 			Date date = new Date();
 			SimpleDateFormat format = new SimpleDateFormat("hh:mm");
-			String s = String.format(userName + "hat sich um " + format.format(date) + " Uhr %."  , msge);
+			String s = String.format(userName + "hat sich um " + format.format(date) + " Uhr %s."  , msge);
 			ObjectMessage objmessage = jmsContext.createObjectMessage();
 			objmessage.setIntProperty("OBSERVER_TYPE", type.ordinal());
 			ChatMessage chatmessage = new ChatMessage(type, userName, s, date);

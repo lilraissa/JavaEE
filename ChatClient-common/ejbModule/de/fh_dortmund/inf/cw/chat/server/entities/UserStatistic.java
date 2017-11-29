@@ -1,4 +1,4 @@
-package de.liliane.cw.chatclient.server.entities;
+package de.fh_dortmund.inf.cw.chat.server.entities;
 
 import java.util.Date;
 

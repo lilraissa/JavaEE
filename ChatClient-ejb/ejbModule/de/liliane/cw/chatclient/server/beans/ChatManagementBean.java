@@ -24,11 +24,9 @@ import javax.jms.Topic;
 
 import com.sun.xml.ws.developer.Stateful;
 
-import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
-import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
+
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
-import de.liliane.cw.chatclient.server.entities.User;
 
 @Singleton
 @Startup
@@ -48,6 +46,13 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 	private List<String> onlineUsers;
 	private long lastItemNummbers = 0;
 
+	@PostConstruct
+	public void init() {
+		users = new HashMap<String, String>();
+		onlineUsers = new ArrayList<String>();
+	}
+		
+		
 	
 	@Override
 	public List<String> getOnlineUsers() {
