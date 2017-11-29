@@ -3,9 +3,7 @@
 /libs
 .recommenders
 /.recommenders
-.project
 .classpath
-.*
-/.*
-/bin
-/build
+/MyLibs
+/Servers
+/RemoteSystemsTempFiles
