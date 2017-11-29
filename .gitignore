@@ -3,9 +3,12 @@
 /libs
 .recommenders
 /.recommenders
-.project
 .classpath
+/.classpath
 .*
 /.*
 /bin
 /build
+.settings/
+.settings
+/.settings
