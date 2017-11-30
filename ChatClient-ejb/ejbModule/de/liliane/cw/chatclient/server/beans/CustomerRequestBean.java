@@ -44,6 +44,7 @@ public class CustomerRequestBean implements MessageListener {
 				
 				//Message an allen Clients schicken
 				jmsContext.createProducer().send(observerTopic, objmessage);
+				
 
 			}
 			

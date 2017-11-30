@@ -10,6 +10,10 @@ public class UserStatistic extends Statistic{
 		this.lastLogin = lastLogin;
 		
 	}
+	public UserStatistic() {
+		
+		
+	}
 
 	public Date getLastLogin() {
 		return lastLogin;

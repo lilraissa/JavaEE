@@ -4,17 +4,23 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
+import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.jms.Topic;
 
+import de.fh_dortmund.inf.cw.chat.server.entities.UserStatistic;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
@@ -26,6 +32,9 @@ import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
 public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	
 	private String userName;
+	private UserStatistic userstatistic;
+	
+	
 
 	@Inject
 	private JMSContext jmsContext;
@@ -38,6 +47,40 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 
 	@EJB
 	private  ChatManagementLocal  externBean;
+	
+	@PostConstruct
+	public void init() {
+		userstatistic = new UserStatistic();
+		
+/*
+		boolean createTimer = true; // zum Begin der Methode init , soll ueberprueft werden ob der Timer schon laeuft
+		// check existings Timers
+		for (Timer timer : timerService.getTimers()) {
+			if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
+				createTimer = false;
+				break;
+			}
+
+		}
+
+		// Timer erzeugen
+		if (createTimer) {
+			TimerConfig timerConfig = new TimerConfig();
+			timerConfig.setInfo(MAIL_STATISTIC_TIMER);
+			timerConfig.setPersistent(true); // Default value
+
+			// Intervall-Timer
+			Calendar initialExpirationCalendar = new GregorianCalendar();
+			initialExpirationCalendar.set(Calendar.HOUR_OF_DAY, 0);
+			initialExpirationCalendar.set(Calendar.MINUTE, 0);
+			initialExpirationCalendar.set(Calendar.SECOND, 0);
+			initialExpirationCalendar.set(Calendar.DAY_OF_MONTH, 0);
+
+			// Interval-Duration halbe Stunde = 3600 Seconds
+			// Intervall Timer
+			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 1800*1000, timerConfig);
+		}*/
+	}
 	
 	
 	@Override
@@ -96,6 +139,7 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		}
 		
 		externBean.getOnlineUsers().add(userName);
+		userstatistic.setLogins(userstatistic.getLogins()+1);
 		
 		notifyViaObserverTopic(ChatMessageType.LOGIN, "angemeldet");
 		
@@ -113,6 +157,8 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		
 		if (externBean.getOnlineUsers().contains(userName)){
 			externBean.getOnlineUsers().remove(userName);
+			
+			userstatistic.setLogouts(userstatistic.getLogouts()+1);
 		}
 		else
 			throw new IllegalArgumentException("User is not connected");
@@ -205,6 +251,13 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 			} catch (JMSException ex) {
 			System.err.println("Error while notify observers via topic: " + ex.getMessage());
 			}
+	}
+
+
+
+	public UserStatistic getuserStatistic() {
+		// TODO Auto-generated method stub
+		return this.userstatistic;
 	}
 
 

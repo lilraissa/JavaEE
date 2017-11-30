@@ -11,6 +11,11 @@ public class Statistic {
 		this.logouts = logouts;
 		this.messages = messages;
 	}
+	
+	public Statistic( ) {
+		
+	}
+	
 
 	public int getLogins() {
 		return logins;

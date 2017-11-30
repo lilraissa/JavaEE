@@ -14,6 +14,10 @@ public class CommonStatistic extends  Statistic{
 		this.endDate = endDate;
 		
 	}
+	public CommonStatistic() {
+		
+		
+	}
 
 
 	public Date getStartingDate() {

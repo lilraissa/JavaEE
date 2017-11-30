@@ -1,6 +1,7 @@
 package de.liliane.cw.chatclient.server.beans;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 
 import javax.annotation.PostConstruct;
@@ -29,7 +30,7 @@ public class StatisticBean {
 	public void init() {
 		
 
-		boolean createTimer = true;
+		boolean createTimer = true; // zum Begin der Methode init , soll ueberprueft werden ob der Timer schon laeuft
 		// check existings Timers
 		for (Timer timer : timerService.getTimers()) {
 			if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
@@ -52,22 +53,37 @@ public class StatisticBean {
 			initialExpirationCalendar.set(Calendar.SECOND, 0);
 			initialExpirationCalendar.set(Calendar.DAY_OF_MONTH, 0);
 
-			// Interval-Duration 1H = 3600 Seconds
+			// Interval-Duration halbe Stunde = 3600 Seconds
 			// Intervall Timer
-			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 3600, timerConfig);
+			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 1800*1000, timerConfig);
 		}
 	}
 
+	// wird aufgerufen wenn ein Timer event auftritt
 	@Timeout
 	public void timeout(Timer timer) {
 		if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
 			Calendar currentDateCalendar = new GregorianCalendar();
+			
+			//Datum aktueller Tag
 			currentDateCalendar.set(Calendar.HOUR_OF_DAY, 0);
 			currentDateCalendar.set(Calendar.MINUTE, 0);
 			currentDateCalendar.set(Calendar.SECOND, 0);
 			currentDateCalendar.set(Calendar.DAY_OF_MONTH, 0);
+			
+			Calendar startingDateCalendar =  new GregorianCalendar();
+			startingDateCalendar.setTime(currentDateCalendar.getTime());
+			startingDateCalendar.add(Calendar.HOUR_OF_DAY, -1); // ein tag vorher
+			Date startingDate = startingDateCalendar.getTime();
+			
+			Calendar endDateCalendar =  new GregorianCalendar();
+			endDateCalendar.setTime(currentDateCalendar.getTime());
+			endDateCalendar.add(Calendar.MILLISECOND, -1);  // eine Minute weniger
+			Date endDate = endDateCalendar.getTime();
+
 
 			// jai pas fini limplementation
+			
 		}
 
 	}

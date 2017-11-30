@@ -213,6 +213,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 			textMessage.setText(message);
 
 			jmsContext.createProducer().send(customerRequestQueue, textMessage);
+			chatUser.getuserStatistic().setMessages(chatUser.getuserStatistic().getMessages()+1);
 
 			// ChatMessage chatMessage = new ChatMessage(text, sender, text,
 			// date);
@@ -233,7 +234,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 	@Override
 	public UserStatistic getUserStatistic() {
 		// TODO Auto-generated method stub
-		return null;
+		return chatUser.getuserStatistic();
 	}
 
 	@Override
