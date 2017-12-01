@@ -193,6 +193,15 @@ public class ServiceHandlerImpl extends ServiceHandler
 					notifyObservers(chatmessage);
 					disconnect();
 				}
+				
+				else if (ChatMessageType.STATISTIC.ordinal() == observerType) {
+					ObjectMessage objmessage = (ObjectMessage) message;
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage Ã¼BER informiert
+																				
+					setChanged();
+					notifyObservers(chatmessage);
+					disconnect();
+				}
 			}
 
 		} catch (JMSException ex) {
@@ -213,15 +222,17 @@ public class ServiceHandlerImpl extends ServiceHandler
 			textMessage.setText(message);
 
 			jmsContext.createProducer().send(customerRequestQueue, textMessage);
-			chatUser.getuserStatistic().setMessages(chatUser.getuserStatistic().getMessages()+1);
 
-			// ChatMessage chatMessage = new ChatMessage(text, sender, text,
-			// date);
+			// Statistic
+			UserStatistic stat = chatManagement.getAllStatistics().get(getUserName());
+			stat.setMessages(stat.getMessages() +1);
+			
+			chatManagement.getAllStatistics().put(getUserName(), stat);
 
 		} catch (Exception ex) {
 
 			try {
-				throw new Exception("Ihre Nachricht kï¿½nnte nicht verschickt werden.");
+				throw new Exception("Ihre Nachricht könnte nicht verschickt werden.");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -234,13 +245,13 @@ public class ServiceHandlerImpl extends ServiceHandler
 	@Override
 	public UserStatistic getUserStatistic() {
 		// TODO Auto-generated method stub
-		return chatUser.getuserStatistic();
+		return chatManagement.getAllStatistics().get(getUserName());
 	}
 
 	@Override
 	public List<CommonStatistic> getStatistics() {
 		// TODO Auto-generated method stub
-		return null;
+		return chatManagement.getCommonStatistics();
 	}
 
 }
