@@ -24,7 +24,9 @@ import javax.jms.Topic;
 
 import com.sun.xml.ws.developer.Stateful;
 
-
+import de.fh_dortmund.inf.cw.chat.server.entities.CommonStatistic;
+import de.fh_dortmund.inf.cw.chat.server.entities.Statistic;
+import de.fh_dortmund.inf.cw.chat.server.entities.UserStatistic;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementLocal;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 
@@ -45,11 +47,18 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 	private Map<String, String> users;
 	private List<String> onlineUsers;
 	private long lastItemNummbers = 0;
-
+	
+	private Map<String, UserStatistic> allStatistics;
+	private List<CommonStatistic> commonStatistics;
+	//private List<Statistic> statistics;
+	
 	@PostConstruct
 	public void init() {
 		users = new HashMap<String, String>();
 		onlineUsers = new ArrayList<String>();
+		allStatistics = new HashMap<String, UserStatistic>();
+		commonStatistics = new ArrayList<>();
+		//statistics = new ArrayList<>();
 	}
 		
 		
@@ -80,5 +89,26 @@ public class ChatManagementBean implements ChatManagementRemote, ChatManagementL
 	public void setUsers(Map<String, String> users) {
 		this.users = users;
 	}
+
+
+
+	@Override
+	public Map<String, UserStatistic> getAllStatistics() {
+		return allStatistics;
+	}
+
+
+
+	@Override
+	public List<CommonStatistic> getCommonStatistics() {
+		return commonStatistics;
+	}
+
+
+
+//	@Override
+//	public List<Statistic> getStatistics() {
+//		return statistics;
+//	}
 
 }
