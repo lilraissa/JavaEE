@@ -10,6 +10,15 @@ public class UserStatistic extends Statistic{
 		this.lastLogin = lastLogin;
 		
 	}
+	
+	public UserStatistic(UserStatistic stat) {
+		if(stat != null) {
+			this.setLogins(stat.getLogins());
+			this.setLogouts(stat.getLogins());
+			this.setMessages(stat.getMessages());
+		}
+	}
+	
 	public UserStatistic() {
 		
 		

@@ -14,6 +14,13 @@ public class CommonStatistic extends  Statistic{
 		this.endDate = endDate;
 		
 	}
+	public CommonStatistic(UserStatistic stat) {
+		if(stat != null) {
+			this.setLogins(stat.getLogins());
+			this.setLogouts(stat.getLogins());
+			this.setMessages(stat.getMessages());
+		}
+	}
 	public CommonStatistic() {
 		
 		

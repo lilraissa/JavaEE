@@ -17,6 +17,4 @@ public interface ChatUser {
 	void changePassword(String paramString1, String paramString2) throws Exception;
 
 	String getUserName();
-	UserStatistic getuserStatistic();
-
 }
