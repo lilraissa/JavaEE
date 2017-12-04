@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -31,56 +32,53 @@ public class StatisticBean {
 	@EJB
 	private ChatManagementLocal chatManagement;
 	
-	private final String MAIL_STATISTIC_TIMER = "MAIL_STATISTIC_TIMER";
+	private final String STATISTIC_TIMER = "STATISTIC_TIMER";
 
 	@PostConstruct
 	public void init() {
-		
-
 		boolean createTimer = true; // zum Begin der Methode init , soll ueberprueft werden ob der Timer schon laeuft
 		// check existings Timers
 		for (Timer timer : timerService.getTimers()) {
-			if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
+			if (STATISTIC_TIMER.equals(timer.getInfo())) {
 				createTimer = false;
 				break;
 			}
-
 		}
-
 		// Timer erzeugen
 		if (createTimer) {
 			TimerConfig timerConfig = new TimerConfig();
-			timerConfig.setInfo(MAIL_STATISTIC_TIMER);
+			timerConfig.setInfo(STATISTIC_TIMER);
 			timerConfig.setPersistent(true); // Default value
 
 			// Intervall-Timer
 			Calendar initialExpirationCalendar = new GregorianCalendar();
-			initialExpirationCalendar.set(Calendar.HOUR_OF_DAY, 0);
-			initialExpirationCalendar.set(Calendar.MINUTE, 0);
-			initialExpirationCalendar.set(Calendar.SECOND, 0);
-			initialExpirationCalendar.set(Calendar.DAY_OF_MONTH, 0);
+//			initialExpirationCalendar.add(Calendar.HOUR_OF_DAY, 1);
+//			initialExpirationCalendar.set(Calendar.MINUTE, 0);
+			initialExpirationCalendar.set(Calendar.SECOND, 10);
+//			initialExpirationCalendar.set(Calendar.DAY_OF_MONTH, 0);
 
-			// Interval-Duration halbe Stunde = 3600 Seconds
+			// Interval-Duration eine Stunde = 3600 Second
 			// Intervall Timer
-			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 1800*1000, timerConfig);
+			timerService.createIntervalTimer(initialExpirationCalendar.getTime(), 3600*1000, timerConfig);
 		}
 	}
 
 	// wird aufgerufen wenn ein Timer event auftritt
 	@Timeout
 	public void timeout(Timer timer) {
-		if (MAIL_STATISTIC_TIMER.equals(timer.getInfo())) {
+		if (STATISTIC_TIMER.equals(timer.getInfo())) {
 			Calendar currentDateCalendar = new GregorianCalendar();
 			
 			//Datum aktueller Tag
-			currentDateCalendar.set(Calendar.HOUR_OF_DAY, 0);
-			currentDateCalendar.set(Calendar.MINUTE, 0);
-			currentDateCalendar.set(Calendar.SECOND, 0);
-			currentDateCalendar.set(Calendar.DAY_OF_MONTH, 0);
+			//currentDateCalendar.set(Calendar.HOUR_OF_DAY, 0);
+//			currentDateCalendar.set(Calendar.MINUTE, 0);
+//			currentDateCalendar.set(Calendar.SECOND, 0);
+//			currentDateCalendar.set(Calendar.DAY_OF_MONTH, 0);
 			
 			Calendar startingDateCalendar =  new GregorianCalendar();
 			startingDateCalendar.setTime(currentDateCalendar.getTime());
 			startingDateCalendar.add(Calendar.HOUR_OF_DAY, -1); // eine Stunde vorher
+			
 			Date startingDate = startingDateCalendar.getTime();
 			
 			Calendar endDateCalendar =  new GregorianCalendar();
@@ -91,12 +89,19 @@ public class StatisticBean {
 			int logout = 0;
 			int messages = 0;
 			
-			Map<String, UserStatistic> userStats = chatManagement.getAllStatistics();
-			Iterator<String> it = userStats.keySet().iterator();
-			while (it.hasNext()) {
-				UserStatistic stat = userStats.get(it.next());
+//			Map<String, UserStatistic> userStats = chatManagement.getAllStatistics();
+//			Iterator<String> it = userStats.keySet().iterator();
+//			while (it.hasNext()) {
+//				UserStatistic stat = userStats.get(it.next());
+//				loging += stat.getLogins();
+//				logout += stat.getLogouts();
+//				messages += stat.getMessages();
+//			}
+			
+			List<UserStatistic> statistics = chatManagement.getAllUserStatistics();
+			for (UserStatistic stat : statistics) {
 				loging += stat.getLogins();
-				loging += stat.getLogouts();
+				logout += stat.getLogouts();
 				messages += stat.getMessages();
 			}
 			
@@ -107,10 +112,7 @@ public class StatisticBean {
 			commomStat.setLogouts(logout);
 			commomStat.setMessages(messages);
 			
-			chatManagement.getCommonStatistics().add(commomStat);
+			chatManagement.createCommonStatistic(commomStat);
 		}
-
 	}
-
-
 }

@@ -11,6 +11,7 @@ import java.util.GregorianCalendar;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
@@ -21,6 +22,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Topic;
 
 import de.fh_dortmund.inf.cw.chat.server.entities.CommonStatistic;
+import de.fh_dortmund.inf.cw.chat.server.entities.User;
 import de.fh_dortmund.inf.cw.chat.server.entities.UserStatistic;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
@@ -33,8 +35,8 @@ import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
 public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 	
 	private String userName;
+	private User user;
 	
-
 	@Inject
 	private JMSContext jmsContext;
 	@Resource(lookup="java:global/jms/ObserverTopic")
@@ -57,15 +59,20 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 			throw new IllegalArgumentException("User can not be null");
 		}
 		
-		String  pwd= externBean.getUsers().get(userName);
+		User user = externBean.findUser(userName);
+		//String  pwd= externBean.getUsers().get(userName);
 		
-		if(pwd!=null )
+		if(user!=null )
 			
 		{
 			throw new IllegalArgumentException(userName + " User already exists");
 		}
+		user = new User(userName, generateHash(password));
 		this.userName = userName; 
-		externBean.getUsers().put(userName, generateHash(password));
+
+		this.user = externBean.createUser(user);
+		
+		//externBean.getUsers().put(userName, generateHash(password));
 		
 		notifyViaObserverTopic(ChatMessageType.REGISTER, null);
 		
@@ -73,77 +80,78 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 
 	@Override
 	public void login(String userName, String password) throws Exception {
-		if(userName==null || password==null )
-	
-		{
+		if(userName==null || password==null ){
 			throw new IllegalArgumentException("User can not be null");
 		}
 		//haspmap cle valeur qui prend lutilisateur en cle et retourne le mdp coe valeur
-		String  pwd= externBean.getUsers().get(userName);
-		if(pwd==null)
-		{
+		//String  pwd= externBean.getUsers().get(userName);
+		User user = externBean.findUser(userName);
+		if(user==null){
 			throw new IllegalArgumentException("Not registred User");
 		}
 		
-		if(!pwd.equals( generateHash(password)))
-		{
-			throw new IllegalArgumentException("Not registred User");
+		if(!user.getPassword().equals( generateHash(password))){
+			throw new IllegalArgumentException("User or password is incorrect");
 		}
+		
+		this.userName = userName;
 		
 		//prüfen, ob benutzer schon angemeldet ist
 		if (externBean.getOnlineUsers().contains(userName)){
 			ChatMessage chatmessage = new ChatMessage(ChatMessageType.DISCONNECT, userName,"Ihre Verbindung wurde getrennt", new Date());
 					
 			ObjectMessage objmessage = jmsContext.createObjectMessage();
-			
+			objmessage.setIntProperty("OBSERVER_TYPE", ChatMessageType.DISCONNECT.ordinal());
 			objmessage.setObject(chatmessage);
 			//selektor nur bei header und property 
 			objmessage.setStringProperty("name", userName); // setProperty nur für diesen user
 			//Message an allen Clients schicken
 			jmsContext.createProducer().send(DisconnectTopic, objmessage);
+			externBean.getOnlineUsers().add(userName);
 		}
-		
-		externBean.getOnlineUsers().add(userName);
+		//externBean.getOnlineUsers().add(userName);
+		user.setOnline(true);
+		this.user = externBean.updateUser(user);
 		// Statistik
-		loginStatistik();
 		notifyViaObserverTopic(ChatMessageType.LOGIN, "angemeldet");
-		
+		loginStatistik();
+	
 	}
 
 	private void loginStatistik() {
-		UserStatistic stat = externBean.getAllStatistics().get(userName);
+		UserStatistic stat = externBean.findUstaticStatistic(userName);
 		if(stat == null) {
 			stat = new UserStatistic();
 			stat.setLastLogin(new Date());
+			stat.setLogins(stat.getLogins() + 1);
+			stat.setUser(user);
+			externBean.createUstaticStatistic(stat);
+		}else {
+			stat.setLastLogin(new Date());
+			stat.setLogins(stat.getLogins() + 1);
+			externBean.updateUstaticStatistic(stat);
 		}
-		stat.setLogins(stat.getLogins() + 1);
-		externBean.getAllStatistics().put(userName, stat);
 	}
-
+	
+	@Remove
 	@Override
 	public void logout() throws Exception {
 		
-
-		if(this.userName==null )
-	
-		{
-			throw new IllegalArgumentException("User can not be null");
-		}
-		
-		if (externBean.getOnlineUsers().contains(userName)){
-			externBean.getOnlineUsers().remove(userName);
-		}
-		else
-			throw new IllegalArgumentException("User is not connected");
-		
-		logoutStatistik();
-		notifyViaObserverTopic(ChatMessageType.LOGOUT, "angemeldet");
+		if(this.userName !=null ){
+			User user = externBean.findUser(userName);
+			user.setOnline(false);
+			this.user = externBean.updateUser(user);
+			
+			logoutStatistik();
+			notifyViaObserverTopic(ChatMessageType.LOGOUT, "angemeldet");
+		}	
 	}
 
 	private void logoutStatistik() {
-		UserStatistic stat = externBean.getAllStatistics().get(userName);
+		UserStatistic stat = externBean.findUstaticStatistic(userName);
+		stat.setUser(user);
 		stat.setLogouts(stat.getLogouts() + 1);
-		externBean.getAllStatistics().put(userName, stat);
+		externBean.updateUstaticStatistic(stat);
 		
 	}
 
@@ -165,38 +173,35 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 		{
 			throw new IllegalArgumentException("password can not be null");
 		}
-		String  pwd= externBean.getUsers().get(userName);
-		if(pwd==null)
+		//String  pwd= externBean.getUsers().get(userName);
+		User user = externBean.findUser(userName);
+		if(user==null)
 		{
 			throw new IllegalArgumentException("Not registred User");
 		}
 		
-		if(!pwd.equals( generateHash(password)))
+		if(!user.getPassword().equals( generateHash(password)))
 		{
-			throw new IllegalArgumentException("Not registred User");
+			throw new IllegalArgumentException("User or password is incorrect");
 		}
-		
-		externBean.getUsers().remove(userName);
-		
+		externBean.deleteUser(user);
 	}
 
 	@Override
 	public void changePassword(String oldPassword, String newPassword) throws Exception {
 		
-		String  pwd= externBean.getUsers().get(userName);
-		if(pwd==null)
+		//String  pwd= externBean.getUsers().get(userName);
+		User user = externBean.findUser(userName);
+		if(user==null)
 		{
 			throw new IllegalArgumentException("Not registred User");
 		}
-		
-		if(!pwd.equals( generateHash(oldPassword)))
+		if(!user.getPassword().equals(generateHash(oldPassword)))
 		{
-			throw new IllegalArgumentException("Not registred User");
+			throw new IllegalArgumentException("Password is not correct.");
 		}
-		
-		externBean.getUsers().put(userName, newPassword);
-		
-		
+		user.setPassword(generateHash(newPassword));
+		externBean.updateUser(user);
 	}
 	
 	public String generateHash(String plaintext) {
@@ -232,14 +237,5 @@ public class ChatUserBean implements ChatUserRemote, ChatUserLocal {
 			} catch (JMSException ex) {
 			System.err.println("Error while notify observers via topic: " + ex.getMessage());
 			}
-	}
-
-	
-	private UserStatistic getUserStatistic() {
-		UserStatistic stat = externBean.getAllStatistics().get(userName);
-		if(stat == null) {
-			stat = new UserStatistic();
-		}
-		return stat;
 	}
 }

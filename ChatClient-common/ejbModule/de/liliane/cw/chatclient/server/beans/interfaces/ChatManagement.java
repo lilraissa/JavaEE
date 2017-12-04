@@ -5,6 +5,7 @@ import java.util.Map;
 
 import de.fh_dortmund.inf.cw.chat.server.entities.CommonStatistic;
 import de.fh_dortmund.inf.cw.chat.server.entities.Statistic;
+import de.fh_dortmund.inf.cw.chat.server.entities.User;
 import de.fh_dortmund.inf.cw.chat.server.entities.UserStatistic;
 
 public interface ChatManagement {
@@ -15,9 +16,10 @@ public interface ChatManagement {
 
 	int getNumberOfOnlineUsers();
 	
-	Map<String, String> getUsers();
+	UserStatistic findUstaticStatistic(String userName);
 	
-	Map<String, UserStatistic> getAllStatistics();
+	//Map<String, UserStatistic> getAllStatistics();
 	//List<Statistic> getStatistics();
 	List<CommonStatistic> getCommonStatistics();
+	
 }

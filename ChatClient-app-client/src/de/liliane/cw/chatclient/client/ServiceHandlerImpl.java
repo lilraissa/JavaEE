@@ -1,12 +1,7 @@
 package de.liliane.cw.chatclient.client;
 
-import java.beans.Customizer;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
+import java.awt.TrayIcon.MessageType;
 import java.util.List;
-import java.util.Observable;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSContext;
@@ -31,6 +26,7 @@ import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessage;
 import de.fh_dortmund.inf.cw.chat.server.shared.ChatMessageType;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatManagementRemote;
 import de.liliane.cw.chatclient.server.beans.interfaces.ChatUserRemote;
+import de.liliane.cw.chatclient.server.beans.interfaces.StatisticMessageRemote;
 
 public class ServiceHandlerImpl extends ServiceHandler
 		implements UserSessionHandler, MessageListener, ChatMessageHandler, StatisticHandler {
@@ -44,6 +40,8 @@ public class ServiceHandlerImpl extends ServiceHandler
 	private Topic disconnectTopic;
 	private Queue customerRequestQueue;
 	// private static String userName;
+
+	private StatisticMessageRemote statisticMessage;
 
 	private ServiceHandlerImpl() {
 
@@ -79,10 +77,11 @@ public class ServiceHandlerImpl extends ServiceHandler
 			observerTopic = (Topic) ctx.lookup("java:global/jms/ObserverTopic");
 			jmsContext.createConsumer(observerTopic).setMessageListener(this);
 
-			String selector = "name = " + getUserName();
 			// DisconnectTopic
 			disconnectTopic = (Topic) ctx.lookup("java:global/jms/DisconnectTopic");
-			jmsContext.createConsumer(disconnectTopic, selector).setMessageListener(this);
+			// String selector = "name is not null";
+			// jmsContext.createConsumer(disconnectTopic,
+			// selector).setMessageListener(this);
 
 			// Queue
 			customerRequestQueue = (Queue) ctx.lookup("java:global/jms/CustomerRequestQueue");
@@ -121,7 +120,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 	@Override
 	public int getNumberOfRegisteredUsers() {
 
-		return chatManagement.getNumberOfOnlineUsers();
+		return chatManagement.getNumberOfRegisteredUsers();
 	}
 
 	@Override
@@ -139,7 +138,18 @@ public class ServiceHandlerImpl extends ServiceHandler
 	@Override
 	public void login(String arg0, String arg1) throws Exception {
 		chatUser.login(arg0, arg1);
+		try {
+			String selector = "name = '" + arg0 + "'";
+			jmsContext.createConsumer(disconnectTopic, selector).setMessageListener(this);
 
+			if (statisticMessage == null) {
+				statisticMessage = (StatisticMessageRemote) ctx.lookup(
+						"java:global/ChatClient-ear/ChatClient-ejb/StatisticMessageBean!de.liliane.cw.chatclient.server.beans.interfaces.StatisticMessageRemote");
+				statisticMessage.createTimer(30*60*1000);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -150,7 +160,6 @@ public class ServiceHandlerImpl extends ServiceHandler
 
 	@Override
 	public void register(String arg0, String arg1) throws Exception {
-
 		chatUser.register(arg0, arg1);
 	}
 
@@ -178,29 +187,35 @@ public class ServiceHandlerImpl extends ServiceHandler
 						|| ChatMessageType.LOGOUT.ordinal() == observerType
 						|| ChatMessageType.REGISTER.ordinal() == observerType) {
 					ObjectMessage objmessage = (ObjectMessage) message;
-					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage üBER informiert
-																					
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei
+																					// an-und
+																					// abmeldung
+																					// GUI
+																					// ChatMessage
+																					// üBER
+																					// informiert
+
 					// Beobachter �ber �nderungen informieren
 					setChanged();
 					notifyObservers(chatmessage); // Nachricht wird angezeigt
-				}
-				else if (ChatMessageType.DISCONNECT.ordinal() == observerType) {
+				} else if (ChatMessageType.STATISTIC.ordinal() == observerType) {
 					ObjectMessage objmessage = (ObjectMessage) message;
-					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage üBER informiert
-																					
-					// Beobachter �ber �nderungen informieren
+					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();
 					setChanged();
 					notifyObservers(chatmessage);
 					disconnect();
 				}
-				
-				else if (ChatMessageType.STATISTIC.ordinal() == observerType) {
-					ObjectMessage objmessage = (ObjectMessage) message;
-					ChatMessage chatmessage = (ChatMessage) objmessage.getObject();// bei an-und abmeldung GUI ChatMessage üBER informiert
-																				
-					setChanged();
-					notifyObservers(chatmessage);
-					disconnect();
+
+			} else {
+				if (message.getJMSDestination().equals(disconnectTopic)) {
+					int observerType = message.getIntProperty("OBSERVER_TYPE");
+					if (ChatMessageType.DISCONNECT.ordinal() == observerType) {
+						ObjectMessage objmessage = (ObjectMessage) message;
+						ChatMessage chatmessage = (ChatMessage) objmessage.getObject();
+						setChanged();
+						notifyObservers(chatmessage);
+						disconnect();
+					}
 				}
 			}
 
@@ -222,17 +237,13 @@ public class ServiceHandlerImpl extends ServiceHandler
 			textMessage.setText(message);
 
 			jmsContext.createProducer().send(customerRequestQueue, textMessage);
-
-			// Statistic
-			UserStatistic stat = chatManagement.getAllStatistics().get(getUserName());
-			stat.setMessages(stat.getMessages() +1);
-			
-			chatManagement.getAllStatistics().put(getUserName(), stat);
+	
+			chatManagement.incrementMessageNumber(getUserName());
 
 		} catch (Exception ex) {
 
 			try {
-				throw new Exception("Ihre Nachricht k�nnte nicht verschickt werden.");
+				throw new Exception("Ihre Nachricht k�nnte nicht verschickt werden.");
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -245,7 +256,7 @@ public class ServiceHandlerImpl extends ServiceHandler
 	@Override
 	public UserStatistic getUserStatistic() {
 		// TODO Auto-generated method stub
-		return chatManagement.getAllStatistics().get(getUserName());
+		return chatManagement.findUstaticStatistic(getUserName());
 	}
 
 	@Override
